@@ -377,14 +377,38 @@ def extract_files(sources):
       files.append(source)
   return files
 
+# Remove all sources not corresponding to restricted languages
+def restrict_languages(sources, restricted_languages):
+  restricted_languages = restricted_languages.split(',')
+  restricted = []
+  for l in restricted_languages:
+    try:
+      restricted.append(languages['.'+l])
+    except:
+      print "Language %s is not recognise." % l
+  
+  files = []
+  for source in sources:
+    try:
+      language = get_language(source)
+    except:
+      print "Language is not supported or recognise. %s ingnored." % source
+      continue
+    
+    if language in restricted:
+      files.append(source)
+  
+  return files
+
 # For each source file passed in as an argument, generate the documentation.
-def process(sources, preserve_paths=True, outdir=None):
+def process(sources, preserve_paths=True, outdir=None, restricted_languages=None):
     if not outdir:
         raise TypeError("Missing the required 'outdir' keyword argument.")
         
     sources = extract_files(sources)
     
-    print sources
+    if restricted_languages:
+      sources = restrict_languages(sources, restricted_languages)
     
     sources.sort()
     if sources:
@@ -424,8 +448,12 @@ def main():
                       dest='outdir', default='docs',
                       help='The output directory that the rendered files should go to.')
 
+    parser.add_option('-l', '--languages', action='store', type='string',
+                      dest='languages',
+                      help='Restrict to given languages (eg: py,rb for python and ruby files)')
+
     opts, sources = parser.parse_args()
-    process(sources, outdir=opts.outdir, preserve_paths=opts.paths)
+    process(sources, outdir=opts.outdir, preserve_paths=opts.paths, restricted_languages=opts.languages)
 
 # Run the script.
 if __name__ == "__main__":
