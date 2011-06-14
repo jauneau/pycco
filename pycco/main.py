@@ -366,11 +366,26 @@ highlight_start = "<div class=\"highlight\"><pre>"
 # The end of each Pygments highlight block.
 highlight_end = "</pre></div>"
 
+# Extract all files from given directories recursivly
+def extract_files(sources):
+  files = []
+  for source in sources:
+    if os.path.isdir(source):
+      # get all files recursivly form directory
+      files += extract_files(map(lambda x: os.path.join(source, x), os.listdir(source)))
+    else:
+      files.append(source)
+  return files
+
 # For each source file passed in as an argument, generate the documentation.
 def process(sources, preserve_paths=True, outdir=None):
     if not outdir:
         raise TypeError("Missing the required 'outdir' keyword argument.")
-
+        
+    sources = extract_files(sources)
+    
+    print sources
+    
     sources.sort()
     if sources:
         ensure_directory(outdir)
@@ -378,23 +393,24 @@ def process(sources, preserve_paths=True, outdir=None):
         css.write(pycco_styles)
         css.close()
 
-        def next_file():
-            s = sources.pop(0)
-            dest = destination(s, preserve_paths=preserve_paths, outdir=outdir)
+        for s in sources:
+          try:
+            language = get_language(s)
+          except:
+            print "Language is not supported or recognise. %s ingnored." % s
+            continue
+          dest = destination(s, preserve_paths=preserve_paths, outdir=outdir)
 
-            try:
-                os.makedirs(path.split(dest)[0])
-            except OSError:
-                pass
+          try:
+              os.makedirs(path.split(dest)[0])
+          except OSError:
+              pass
 
-            with open(destination(s, preserve_paths=preserve_paths, outdir=outdir), "w") as f:
-                f.write(generate_documentation(s, preserve_paths=preserve_paths, outdir=outdir))
+          with open(destination(s, preserve_paths=preserve_paths, outdir=outdir), "w") as f:
+              f.write(generate_documentation(s, preserve_paths=preserve_paths, outdir=outdir))
 
-            print "pycco = %s -> %s" % (s, dest)
+          print "pycco = %s -> %s" % (s, dest)
 
-            if sources:
-                next_file()
-        next_file()
 
 __all__ = ("process", "generate_documentation")
 
