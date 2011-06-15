@@ -292,6 +292,10 @@ languages = {
         "multistart": "--[[", "mutliend": "--]]"},
 
     ".erl": { "name": "erlang", "symbol": "%%" },
+    
+    ".html": { "name": "html", "symbol": "<!--",
+        "multistart": "<!--", "multiend": "-->"},
+    
 }
 
 # Build out the appropriate matchers and delimiters for each language.
